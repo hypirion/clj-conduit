@@ -41,7 +41,10 @@
 
 (defn do-yield!
   [state blk val]
-  ;; This is okay, because we wrap acc inputs in a Reduced.
+  ;; This is actually not _that_ okay, because we may unwrap a Reduced input
+  ;; acc. Not sure how one would go around that or even if it's considered legal
+  ;; transducer sense, but if we don't, we probably break one or two
+  ;; transducers. Bah.
   (let [acc (unreduced (ioc/aget-object state ACC-IDX))
         f (ioc/aget-object state REDUCER-IDX)
         res (f acc val)]
@@ -62,9 +65,14 @@
      ;; No data left, so set the default-value as value
      :complete (do (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX default-value)
                    :recur)
-     ;; No more input? Then park. The transducer wrapper will push the next
-     ;; value in before we're started again, so this is not an issue.
-     :no-input nil)))
+     ;; No more input? Then park. I had the assumption the terminator (this fn)
+     ;; had its own block and would be called again, but alas, only the previous
+     ;; one would be. So what we do is: We do as with :complete, but we park.
+     ;; Since we've not changed our XDUCER-STATE-IDX, the dispatcher can check
+     ;; for that value and replace VALUE-IDX if need be before starting again.
+     ;; Complete can just leave the value be.
+     :no-input (do (ioc/aset-all! state ioc/STATE-IDX blk ioc/VALUE-IDX default-value)
+                   nil))))
 
 (def conduit-terminators
   {`await! `do-await!
@@ -87,7 +95,7 @@
             acc#
             (do
               (ioc/aset-all! state# XDUCER-STATE-IDX :complete
-                             ACC-IDX (reduced acc#))
+                             ACC-IDX acc#)
               (ioc/run-state-machine state#)
               ;; this will run until we're done, so no worries here.
               (let [acc# (unreduced (ioc/aget-object state# ACC-IDX))]
@@ -98,9 +106,14 @@
           (if (ioc/finished? state#)
             (reduced acc#)
             (do
-              (ioc/aset-all! state# XDUCER-STATE-IDX :input
-                             ACC-IDX (reduced acc#)
-                             INPUT-IDX input#)
+              (if (identical? (ioc/aget-object state# XDUCER-STATE-IDX) :no-input)
+                (ioc/aset-all! state# ;; XDUCER-STATE-IDX :no-input
+                               ACC-IDX acc#
+                               ioc/VALUE-IDX input#)
+                (ioc/aset-all! state# XDUCER-STATE-IDX :input
+                               ACC-IDX acc#
+                               INPUT-IDX input#))
+              ;; previous call moved
               (ioc/run-state-machine state#)
               (let [acc# (ioc/aget-object state# ACC-IDX)]
                 (ioc/aset-all! state# ACC-IDX nil INPUT-IDX nil)
