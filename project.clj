@@ -1,4 +1,4 @@
-(defproject clj-conduit "0.1.0-SNAPSHOT"
+(defproject com.hypirion/conduit "0.1.0-SNAPSHOT"
   :description "Clojure Conduits"
   :url "https://github.com/hyPiRion/clj-conduit"
   :license {:name "Eclipse Public License"

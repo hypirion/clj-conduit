@@ -1,6 +1,6 @@
 # clj-conduit
 
-A Clojure library designed to ... well, that part is up to you.
+Conduits are transducers with a different interface.
 
 ## Usage
 
