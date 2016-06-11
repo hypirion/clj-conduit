@@ -58,7 +58,7 @@ To use clj-conduit, you need to add the following to your `:dependencies`:
 [com.hypirion/conduit "0.1.0"]
 ```
 
-The most essential parts of the conduit library is `conduit`, `await` and
+The most essential part of the conduit library is `conduit`, `await` and
 `yield`. I usually prefer to refer them directly, like so:
 
 ```clj
@@ -93,8 +93,8 @@ transducer `map`. It is implemented as follows:
 ```
 
 Note that we have to wrap the `(yield (f (await)))` part in a while true-loop to
-avoid reading a single value. If it was implemented as follows, it would only
-read (at most) a single value and send it down:
+avoid reading just a single value. If it was implemented as follows, it would
+only read (at most) a single value and send it down:
 
 ```clj
 (defn mapping1 [f]
