@@ -52,6 +52,12 @@ If you want the full story, you can read my blogpost
 which explains in detail the entire library and the rationale for it. If you
 just want basic usage, you can continue reading this section.
 
+To use clj-conduit, you need to add the following to your `:dependencies`:
+
+```clj
+[com.hypirion/conduit "0.1.0"]
+```
+
 The most essential parts of the conduit library is `conduit`, `await` and
 `yield`. I usually prefer to refer them directly, like so:
 
